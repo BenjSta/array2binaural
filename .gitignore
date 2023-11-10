@@ -11,3 +11,6 @@ ild_itd_analysis/filters
 !ild_itd_analysis/filters/README.md
 Easycom_array_32000Hz_o25_22samps_delay.npy
 simulate_scenarios_and_mic_signals/rendered_mic/*
+origin_array_tf_data/*
+!origin_array_tf_data/README.md
+*.pyc
