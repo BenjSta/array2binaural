@@ -1,0 +1,1 @@
+These impulse responses are taken from the IEM plugin suite available here: https://git.iem.at/audioplugins/IEMPluginSuite/-/tree/master/BinauralDecoder/Source/IRs

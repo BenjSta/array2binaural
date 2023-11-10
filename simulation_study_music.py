@@ -1,17 +1,14 @@
 #%%
-%matplotlib qt
 import h5py
 from joblib import Parallel, delayed
 from joblib import wrap_non_picklable_objects
 import matplotlib.colors
+# Easycom array transfer function data
 PATH = 'Device_ATFs.h5'
 f = h5py.File(PATH,'r')
 f_phi = f['Phi']
 f_theta = f['Theta']
-# #%%
-# spear_hoa_d, fs  = soundfile.read('ambix2array_fir.wav')
-# spear_hoa_d = spear_hoa_d.reshape(256, spear_hoa_d.shape[0] // 256, 6).transpose(1, 0, 2)
-# spear_hoa_d = scipy.signal.resample_poly(np.array(spear_hoa_d)[:, :, [0, 1, 2, 4, 5]], FS, fs)
+
 import matplotlib.pyplot as plt
 import numpy as np
 from ambisonics import sph_hankel2_diff, sh_azi_zen
@@ -25,18 +22,12 @@ from joblib import Parallel, delayed
 
 def getRadialTerms(N, Nfft, fs, R):
     """Returns the radial terms of a spherical scatterer in the frequency domain.
-    LS coordinates only necesarry for excursion checks / fc  setting and tuning, when plotIt==True 
 
     Args:
         N (int): SH order
         fc (ndarray): cut-on frequencies for bandpass regularization filters
         Nfft (int): FFT size
         R (float): array radius
-        rLS (float): LS radius
-        ls_thetaphi (ndarray): LS coordinates, only necesarry for excursion checks / fc setting
-        mixo_idx (ndarray): mixed-order indices
-        array_name (str, optional): array name. Defaults to "".
-        plotIt (bool, optional): flat for plotting results. Defaults to False.
 
     Returns:
         ndarray: limited radial filters
@@ -48,17 +39,16 @@ def getRadialTerms(N, Nfft, fs, R):
     #  Parameters, Constants
     c = 343
     k = 2*np.pi*f / c
-    #rho = 1.2
-    
     hn = np.zeros((len(f), N+1), dtype=complex)
-
+    hankel2_diff = sph_hankel2_diff(k*R, N)
     for n in range(N+1):
-        hn[:,n] = 4 * np.pi * (1j)**(n+1) /  ((k*R)**2 * sph_hankel2_diff(k*R, N))
+        hn[:,n] = 4 * np.pi * (1j)**(n+1) /  ((k*R)**2 * hankel2_diff[:, n])
 
     return hn
 
 #%%
-def getSphericalMicIR(N, azi, zen, Nfft, fs, R):
+def getSphericalMicTF(N, azi, zen, Nfft, fs, R):
+    """Returns the sh-domain tranfer functions of microphones on a spherical scatterer"""
     H = getRadialTerms(N, Nfft, fs, R)
     print(np.max(np.abs(H)))
     H_all = []
@@ -66,19 +56,13 @@ def getSphericalMicIR(N, azi, zen, Nfft, fs, R):
         H_all += [H[:, i]]*(i*2+1)
         
     H_all = np.stack(H_all, -1)
-    #print(H_all.shape)
-    sh1 = sh_azi_zen(N, azi[0], zen[0])
-    #print(sh1[:, 0])
-    #norm = np.sum(sh1 * sh1)
     sh = sh_azi_zen(N, azi, zen)
-    print(np.linalg.norm(sh1))
-    #Hf = H_all[:, None, :] * sh1[None, :, :]
 
-    #print(Hf.shape)
     return H_all[:, None, :] * sh[None, :, :]
 
 
 #%%
+# 
 MIC_AMBI_PATH = 'HMD_SensorArrayResponses.mat'
 mic_space = loadmat(MIC_AMBI_PATH)
 dirs_deg = mic_space['dirs_deg']
@@ -89,8 +73,6 @@ ele = dirs_deg[:, 1] / 180 * np.pi
 zenith = np.pi/2 - ele
 shmat_leo = sh_matrix(25, azi, zenith)
 sh_array = (np.linalg.pinv(shmat_leo) @ mic_responses[..., None])[..., 0]
-#sh_array = np.fft.rfft(mic_ambi, axis=0).transpose(0, 2, 1)
-
 #%%
 f_phi = f_phi[:, f_theta[0, :] <= np.pi/2]
 f_theta = f_theta[:, f_theta[0, :] <= np.pi/2]
@@ -150,19 +132,18 @@ ARRAYS = ["SphericalScatterer-5", "SphericalScatterer-7","Easycom-5-Orig",
                                        "BEM-5-EncDec-ld0", "BEM-7-EncDec-ld0", 
                                         "Easycom-5-EncDec-ld0.1", "Easyc-5-EncDec-ld0.1-cut-ir-search"]
 
-
 #%%
 for array_str in ARRAYS:
     fvec = np.arange(NFFT//2+ 1) / NFFT * FS
     if array_str == "SphericalScatterer-5":
-        sh_array = getSphericalMicIR(25, np.concatenate([np.linspace(-np.pi / 2, np.pi / 2, 5, 
+        sh_array = getSphericalMicTF(25, np.concatenate([np.linspace(-np.pi / 2, np.pi / 2, 5, 
                                             endpoint=True)]), np.array([np.pi/2]*5), NFFT, FS, 0.08)
 
     elif array_str == "SphericalScatterer-7":
-        sh_array = getSphericalMicIR(25, np.concatenate([np.linspace(-np.pi / 2, np.pi / 2, 5, 
+        sh_array = getSphericalMicTF(25, np.concatenate([np.linspace(-np.pi / 2, np.pi / 2, 5, 
                                             endpoint=True), np.array([0, np.pi])]), np.array([np.pi/2]*5 + [0, np.pi/2]), NFFT, FS, 0.08)
     elif array_str == "Easycom-5-EncDec-ld0.1" or  array_str == "Easyc-5-EncDec-ld0.1-cut-ir-search":
-        MIC_AMBI_PATH = 'SPEAR_array_32000Hz_o25_22samps_delay.npy'
+        MIC_AMBI_PATH = 'Easycom_array_32000Hz_o25_22samps_delay.npy'
         mic_ambi = np.load(MIC_AMBI_PATH)
         sh_array = np.fft.rfft(mic_ambi, axis=0).transpose(0, 2, 1)
 
@@ -186,14 +167,13 @@ for array_str in ARRAYS:
             sh_array = (np.linalg.pinv(shmat_leo) @ mic_responses[..., None])[..., 0]
 
 
-
-
     if array_str != "Easycom-5-Orig":
         shmat = sh_matrix(25, f_phi, f_theta, 'real')
         steer_search = (shmat@sh_array[:, :, :, None])[..., 0].transpose(0, 2, 1)
         if array_str == "Easyc-5-EncDec-ld0.1-cut-ir-search":
             steer_search = (shmat@sh_array_cut_steervec[:, :, :, None])[..., 0].transpose(0, 2, 1)
         C = sh_array @ sh_array.transpose(0, 2, 1) / (4*np.pi)
+        shmat = sh_matrix(25, f_phi + 3/180*np.pi, f_theta, 'real')
         steer_source = (shmat@sh_array[:, :, :, None])[..., 0].transpose(0, 2, 1)
     else:
         f = h5py.File('Device_ATFs.h5', 'r')
@@ -220,27 +200,12 @@ for array_str in ARRAYS:
 
     cov_source = steer_source[:, :, :, None] @ np.conj(steer_source[:, :, None, :])
 
-    
-    #np.mean(angle_diff, axis=1), np.mean(np.abs(azi_diff), axis=1), np.mean(np.abs(zenith_diff), axis=1),\
-            #np.quantile(angle_diff, 0.9, axis=1), np.quantile(np.abs(azi_diff), 0.9, axis=1), \
-            #np.quantile(np.abs(zenith_diff), 0.9, axis=1) 
-
-
-
-
     angle_diff_all = Parallel(n_jobs=4)(delayed(compute_music_error_at_snr)(
         snr, cov_source, C, f_phi, f_theta, steer_search) for snr in tqdm.tqdm(snr_all))
 
     angle_diff_over_methods.append(angle_diff_all)
     fvec_over_methods.append(fvec)
-    # mean_angle_diff_total = np.array([m[0] for m in angle_diff_all])
-    # mean_angle_diff_azi = np.array([m[1] for m in angle_diff_all])
-    # mean_angle_diff_zenith = np.array([m[2] for m in angle_diff_all])
 
-    # perc90_angle_diff_total = np.array([m[3] for m in angle_diff_all])
-    # perc90_angle_diff_azi = np.array([m[4] for m in angle_diff_all])
-    # perc90_angle_diff_zenith = np.array([m[5] for m in angle_diff_all])
-    
 #%%
 
 #Maybe what you are looking for is svgutils
@@ -252,39 +217,19 @@ for array_str in ARRAYS:
 mult = 0.8
 errors_fig = plt.figure(figsize=(13*mult, 2.8*mult))
 
-for plt_ind, array_ind in enumerate([2, 6, 0, 3, 1,  4]):
+for plt_ind, array_ind in enumerate([6, 2, 0, 3, 1,  4]):
     
     array_str = ARRAYS[array_ind]
     ad = angle_diff_over_methods[array_ind]
     fvec = fvec_over_methods[array_ind]
-    mean_ad_total = np.array([np.median(m[0], axis=1) for m in ad])
+    median_ad_total = np.array([np.median(m[0], axis=1) for m in ad])
     perc90_ad_total = np.array([np.quantile(m[0], 0.9, axis=1) for m in ad])
-    
-    # myplot = plt.subplot(2, 6, 2*array_ind+1)
-    # plt.contourf(snr_all, 
-    #             fvec, 
-    #             np.clip(180*mean_ad_total.T/np.pi,0, 50),
-    #             normalize=matplotlib.colors.Normalize(vmin=0, vmax=50, clip=True),
-    #         cmap='Reds', levels=4, vmin=0, vmax=50, extend='neither')
-    # cbar = plt.colorbar()       
-    # plt.yscale('log')
-    # if array_ind >= 3:
-    #     plt.xlabel('SNR in dB')
-    # if np.mod(array_ind, 3) == 0:
-    #     plt.ylabel('frequency in Hz')
-    # plt.ylim([200, 12000])
-
-    # cbar.set_label('mean angular error')
-    # plt.title(array_str)
-    # plt.tight_layout()
-    # myplot.invert_xaxis()
-
 
     #plt.figure(perc90_errors_fig)
     myplot = plt.subplot(1, 6, plt_ind+1)
     contourplot = plt.contourf(snr_all, 
                 fvec, 
-                np.clip(180*mean_ad_total.T/np.pi, 0, 30),
+                np.clip(180*median_ad_total.T/np.pi, 0, 30),
                 normalize=matplotlib.colors.Normalize(vmin=0, vmax=30, clip=True),
             cmap='Reds', levels=3, vmin=0, vmax=30, extend='neither')
    
@@ -333,4 +278,5 @@ cbar.ax.set_yticks([24, 16, 8, 0])
 cbar.ax.set_yticklabels(['24', '16', '8', '0'])
 
 plt.show()
+print(1)
 # %%

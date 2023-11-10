@@ -6,7 +6,7 @@ This repo contains the code to reproduce the signals and figures in the paper
 @inproceedings{stahl2023perceptual2,
     title = {Perceptual Comparison of Dynamic Binaural Reproduction Methods for Head-Mounted Microphone Arrays},
     author = {Stahl, Benjamin and Riedel, Stefan},
-    booktitle = {Proc. 155th Audio Engineering Society Convention: AESNY 2023},
+    booktitle = {Proc. 155th Audio Engineering Society Convention},
     year = {2023}}
 ```
 
