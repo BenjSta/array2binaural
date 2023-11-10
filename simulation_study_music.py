@@ -4,7 +4,7 @@ from joblib import Parallel, delayed
 from joblib import wrap_non_picklable_objects
 import matplotlib.colors
 # Easycom array transfer function data
-PATH = 'Device_ATFs.h5'
+PATH = 'origin_array_tf_data/Device_ATFs.h5'
 f = h5py.File(PATH,'r')
 f_phi = f['Phi']
 f_theta = f['Theta']
@@ -63,7 +63,7 @@ def getSphericalMicTF(N, azi, zen, Nfft, fs, R):
 
 #%%
 # 
-MIC_AMBI_PATH = 'HMD_SensorArrayResponses.mat'
+MIC_AMBI_PATH = 'origin_array_tf_data/HMD_SensorArrayResponses.mat'
 mic_space = loadmat(MIC_AMBI_PATH)
 dirs_deg = mic_space['dirs_deg']
 freqs =  mic_space['freqs']
@@ -207,13 +207,6 @@ for array_str in ARRAYS:
     fvec_over_methods.append(fvec)
 
 #%%
-
-#Maybe what you are looking for is svgutils
-
-#import svgutils.compose as sc
-
-
-
 mult = 0.8
 errors_fig = plt.figure(figsize=(13*mult, 2.8*mult))
 
@@ -264,19 +257,18 @@ for plt_ind, array_ind in enumerate([6, 2, 0, 3, 1,  4]):
     elif  array_str == "SphericalScatterer-7":
         title = "Sphere-7Mic"
     
-    #title = title.replace('-ld0', "")
     plt.title(title, fontsize=10)
     plt.tight_layout()
     myplot.invert_xaxis()
 
 errors_fig.subplots_adjust(bottom=0.22, left=0.06, right=0.92, wspace=0.07, hspace=0.29)
 cbar_ax = errors_fig.add_axes([0.94, 0.15, 0.008, 0.7])
-#errors_fig.subplots_adjust(right=0.91, wspace=0.08, hspace=0.24)
 cbar = errors_fig.colorbar(contourplot, cax=cbar_ax)
 cbar.set_label('median angular error')
 cbar.ax.set_yticks([24, 16, 8, 0])
 cbar.ax.set_yticklabels(['24', '16', '8', '0'])
 
-plt.show()
-print(1)
+plt.savefig('figures/music_sim.png', dpi=300, bbox_inches='tight')
+plt.show(block=True)
+print('Done')
 # %%
