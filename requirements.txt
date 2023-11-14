@@ -1,0 +1,12 @@
+numpy
+scipy
+matplotlib
+spaudiopy
+torch
+h5py
+tqdm
+joblib
+soundfile
+cupy
+
+
