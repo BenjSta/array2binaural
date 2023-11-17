@@ -22,7 +22,8 @@ d = d * np.exp(1j * 2 * np.pi * fvec * array_sh_delay / fs)[:, None, None]
 
 # foa encoder
 dfoa = d[:, :4, :].transpose(0, 2, 1)
-dcov = np.conj(dfoa[:, :, [0, 1, 3]].transpose(0, 2, 1)) @ dfoa[:, :, [0, 1, 3]]
+dcov = np.conj(dfoa[:, :, [0, 1, 3]].transpose(
+    0, 2, 1)) @ dfoa[:, :, [0, 1, 3]]
 p = np.linalg.eigvalsh(dcov)[:, -1]
 fdependent_reg = 0.001 * p
 dcov_reg = dcov + (fdependent_reg[:, None, None]) * np.eye(3)[None, :, :]
@@ -30,14 +31,16 @@ e = np.linalg.inv(dcov_reg) @ np.conj(dfoa[:, :, [0, 1, 3]].transpose(0, 2, 1))
 ewxy = np.zeros((e.shape[0], 4, e.shape[2]), dtype="complex128")
 ewxy[:, [0, 1, 3], :] = e
 e = ewxy
-e = e * 2 / np.linalg.norm(e @ d.transpose(0, 2, 1), "fro", axis=(1, 2))[:, None, None]
+e = e * 2 / np.linalg.norm(e @ d.transpose(0, 2, 1),
+                           "fro", axis=(1, 2))[:, None, None]
 foa_enc = e
 
 foa_enc_td = np.fft.irfft(foa_enc, axis=0)
 
 foa_enc_td = np.roll(foa_enc_td, FILTLEN // 2, axis=0)
 foa_enc_td = (
-    foa_enc_td[:FILTLEN, :, :] * signal.windows.tukey(FILTLEN, 0.1)[:, None, None]
+    foa_enc_td[:FILTLEN, :, :] *
+    signal.windows.tukey(FILTLEN, 0.1)[:, None, None]
 )
 
 
@@ -65,64 +68,64 @@ for rotation in [0, 90]:
     inv_rotmat1 = np.linalg.inv(rotmat1)
     inv_rotmat5 = np.linalg.inv(rotmat5)
 
-    print("evaluating ambibeams steering vectors...")
-    directions_ambibeams = (
+    print("evaluating bfbr steering vectors...")
+    directions_bfbr = (
         np.pi
         / 180
         * np.stack([np.linspace(0, 360, 5, endpoint=False), np.array(5 * [90])], axis=0)
     )
-    xyz_ambibeams = np.stack(
+    xyz_bfbr = np.stack(
         spaudiopy.utils.sph2cart(
-            directions_ambibeams[0, :], directions_ambibeams[1, :]
+            directions_bfbr[0, :], directions_bfbr[1, :]
         ),
         -1,
     )
     azi, colat, _ = spaudiopy.utils.cart2sph(
-        xyz_ambibeams[:, 0], xyz_ambibeams[:, 1], xyz_ambibeams[:, 2]
+        xyz_bfbr[:, 0], xyz_bfbr[:, 1], xyz_bfbr[:, 2]
     )
-    Y_norot_ambibeams = spaudiopy.sph.sh_matrix(5, azi, colat, "real")
+    Y_norot_bfbr = spaudiopy.sph.sh_matrix(5, azi, colat, "real")
     # Frames x Freq x Sources x SH Components x Microphones
 
-    xyz_frame_ambibeams = (rotmat_xyz[:, None, :, :] @ xyz_ambibeams[None, :, :, None])[
+    xyz_frame_bfbr = (rotmat_xyz[:, None, :, :] @ xyz_bfbr[None, :, :, None])[
         ..., 0
     ]
-    azi_ambibeams, colat_ambibeams, _ = spaudiopy.utils.cart2sph(
-        xyz_frame_ambibeams[..., 0].flatten(),
-        xyz_frame_ambibeams[..., 1].flatten(),
-        xyz_frame_ambibeams[..., 2].flatten(),
+    azi_bfbr, colat_bfbr, _ = spaudiopy.utils.cart2sph(
+        xyz_frame_bfbr[..., 0].flatten(),
+        xyz_frame_bfbr[..., 1].flatten(),
+        xyz_frame_bfbr[..., 2].flatten(),
     )
-    Y_ambibeams = spaudiopy.sph.sh_matrix(25, azi_ambibeams, colat_ambibeams, "real")
-    Y_ambibeams = Y_ambibeams.reshape(
-        xyz_frame_ambibeams.shape[0], xyz_frame_ambibeams.shape[1], -1
+    Y_bfbr = spaudiopy.sph.sh_matrix(25, azi_bfbr, colat_bfbr, "real")
+    Y_bfbr = Y_bfbr.reshape(
+        xyz_frame_bfbr.shape[0], xyz_frame_bfbr.shape[1], -1
     )
 
-    D_ambibeams = []
-    for i in range(Y_ambibeams.shape[1]):
-        D_ambibeams.append(
-            np.sum(Y_ambibeams[:, None, i, :, None] * d[None, :, :, :], -2)
+    D_bfbr = []
+    for i in range(Y_bfbr.shape[1]):
+        D_bfbr.append(
+            np.sum(Y_bfbr[:, None, i, :, None] * d[None, :, :, :], -2)
         )
-    D_ambibeams = np.stack(D_ambibeams, -2)
-    # D_ambibeams (Steering Vectors): Frames x Freq x Directions x Microphones
+    D_bfbr = np.stack(D_bfbr, -2)
+    # D_bfbr (Steering Vectors): Frames x Freq x Directions x Microphones
     print("Done.")
-    # u, s, vh = np.linalg.svd(np.conj(D_ambibeams).transpose(0, 1, 3, 2), full_matrices=False)
-    W_ambibeams = np.conj(
+    # u, s, vh = np.linalg.svd(np.conj(D_bfbr).transpose(0, 1, 3, 2), full_matrices=False)
+    W_bfbr = np.conj(
         inv_diff_cov_matrix[None, :, None, :, :]
-        @ D_ambibeams[..., None]
+        @ D_bfbr[..., None]
         / (
-            np.conj(D_ambibeams[..., None, :])
+            np.conj(D_bfbr[..., None, :])
             @ inv_diff_cov_matrix[None, :, None, :, :]
-            @ D_ambibeams[..., None]
+            @ D_bfbr[..., None]
         )
     )[..., 0]
-    W_ambibeams_td = np.fft.irfft(W_ambibeams, axis=1)
-    W_ambibeams_td = np.roll(W_ambibeams_td, FILTLEN // 2, axis=1)
-    W_ambibeams_td = (
-        W_ambibeams_td[:, :FILTLEN, :, :]
+    W_bfbr_td = np.fft.irfft(W_bfbr, axis=1)
+    W_bfbr_td = np.roll(W_bfbr_td, FILTLEN // 2, axis=1)
+    W_bfbr_td = (
+        W_bfbr_td[:, :FILTLEN, :, :]
         * signal.windows.tukey(FILTLEN, 0.1)[None, :, None, None]
     )
 
-    np.save("ild_itd_analysis/filters/ambibeams_rot_%d_f.npy" % rotation, W_ambibeams)
-    np.save("ild_itd_analysis/filters/ambibeams_rot_%d.npy" % rotation, W_ambibeams_td)
+    np.save("ild_itd_analysis/filters/bfbr_rot_%d_f.npy" % rotation, W_bfbr)
+    np.save("ild_itd_analysis/filters/bfbr_rot_%d.npy" % rotation, W_bfbr_td)
 
     for source_dir in np.arange(0, 360, 5):
         Y = spaudiopy.sph.sh_matrix(
@@ -139,7 +142,8 @@ for rotation in [0, 90]:
         print("Done.")
 
         lcmv_to_invert = (
-            np.conj(D) @ inv_diff_cov_matrix[None, :, :, :] @ D.transpose(0, 1, 3, 2)
+            np.conj(D) @ inv_diff_cov_matrix[None,
+                                             :, :, :] @ D.transpose(0, 1, 3, 2)
         )
 
         e = np.linalg.eigvalsh(lcmv_to_invert)
