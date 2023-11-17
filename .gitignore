@@ -16,3 +16,5 @@ origin_array_tf_data/*
 *.pyc
 encoded/*
 !encoded/README.md
+simulate_scenarios_and_mic_signals/audio_o25/*
+!simulate_scenarios_and_mic_signals/audio_o25/README.md
