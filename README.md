@@ -36,7 +36,7 @@ A demo of the listening experiment stimuli is available here: [https://array2bin
 - (Optional:) Run `compute_emagls_filters/create_cpp_file.py` from `./` to create a `cpp` file with the filter coefficients. This can be used in a real-time application on the given array.  
 
 ### Compute 1st/5th-order Ambisonic signals for FOA encoding/decoding, BFBR, and DOA-informed BF+residual rendering.
-- Run the script `encode.py` in order to apply FOA encoding and beamformers+5th-order encoding and write the output files into `encoded/`. These can be used for binaural rendering using Ambisonic binaural decoders. (For BFBR and  DOA-informed BF+residual rendering, this is a convenience step we used in our experiment, as we used the SceneRotator and 5th-order BinauralDecoder of the IEM-Plugin Suite for the rendering, so we did not have to write a real-time processor that selects and convolves HRIRs according to listener orientations.)
+- Run the script `beamform_array2amb.py` in order to apply FOA encoding and beamformers+5th-order encoding and write the output files into `bemformed_amb/`. These can be used for binaural rendering using Ambisonic binaural decoders. (For BFBR and  DOA-informed BF+residual rendering, this is a convenience step we used in our experiment, as we used the SceneRotator and 5th-order BinauralDecoder of the IEM-Plugin Suite for the rendering, so we did not have to write a real-time processor that selects and convolves HRIRs according to listener orientations.)
 
 ### Instrumental Evaluation
 - In order to compute the resulting ILDs and ITDs and render the corresponding figures into `figures/`, run the scripts `ild_itd_analysis/compute_filters.py` and `ild_itd_analysis/evaluate_filters.py`. from `./`.
