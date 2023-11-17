@@ -169,8 +169,6 @@ if __name__ == '__main__':
                 signals = np.stack([s1, s2], -1)
                 directions = np.pi / 180 * np.array([[-30, 90], [0, 90]]).T
 
-
-            
             elif scenario == 'two_speakers_opposite':
                 s1, _ = soundfile.read('simulate_scenarios_and_mic_signals/source_audio/ebu_sqam/52_cut.wav')
                 s2, _ = soundfile.read('simulate_scenarios_and_mic_signals/source_audio/ebu_sqam/53_cut.wav')

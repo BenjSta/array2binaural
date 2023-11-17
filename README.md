@@ -26,7 +26,7 @@ A demo of the listening experiment stimuli is available here: [https://array2bin
 - Run the script `encode_array_into_sh.py` to encode the Easycom array transfer functions into the spherical harmonics domain. This will create the file `Easycom_array_32000Hz_o25_22samps_delay.npy`. 
 
 ### Simulate the scenarios and microphone signals
-- (Optional: Run the script `simulate_scenarios_and_mic_signals/generate_stimuli.py` from `./`. This will re-create the 6 Ambisonic `wav` files in `simulate_scenarios_and_mic_signals/audio_o25/`, however, with different seed for the diffuse part of the impulse response.)
+- Run the script `simulate_scenarios_and_mic_signals/generate_stimuli.py` from `./`. This will re-create the 6 Ambisonic `wav` files in `simulate_scenarios_and_mic_signals/audio_o25/`, however, with different seed for the diffuse part of the impulse response.
 
 - Run the script `simulate_scenarios_and_mic_signals/create_mic_signals.py` from `./`. This will create simulated microphone signals in the `simulate_scenarios_and_mic_signals/rendered_mic` folder.
 
