@@ -9,3 +9,4 @@ joblib
 soundfile
 requests
 pyroomacoustics
+librosa
