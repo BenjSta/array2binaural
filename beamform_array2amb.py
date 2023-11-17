@@ -8,6 +8,7 @@ from ambisonics import calculate_rotation_matrix
 import os
 
 MIC_AMBI_PATH = 'Easycom_array_32000Hz_o25_22samps_delay.npy'
+OUTDIR = 'beamformed_amb'
 fs = 32000
 array_sh_delay = 22  # samples
 array_sh = np.load(MIC_AMBI_PATH)
@@ -16,6 +17,7 @@ WINLEN = 640
 HOPSIZE = 320
 FILTLEN = 512
 N_FFT = WINLEN + FILTLEN
+
 
 def overlap_add(frames, hop_length):
     frames_shape = frames.shape
@@ -225,7 +227,7 @@ for recording_rot in ['static', 'dynamic']:
                     hoa_td = overlap_add(hoa.T, HOPSIZE)[..., HOPSIZE:HOPSIZE+mic.shape[0]].T
                     amb_mic = np.sum(signal.fftconvolve(resfilt_td, windowed_mic_frames[:, :, None, :], axes=1), axis=-1)
                     soundfile.write(os.path.join(
-                        'encoded', scenario + '_' + reverb + '_' + recording_rot +
+                        OUTDIR, scenario + '_' + reverb + '_' + recording_rot +
                         '_' + discrete_beams + '_hoa.wav'),
                                     hoa_td,
                                     fs,
@@ -236,7 +238,7 @@ for recording_rot in ['static', 'dynamic']:
                 amb_mic_td = overlap_add(amb_mic.T, HOPSIZE)[:, HOPSIZE:HOPSIZE + mic.shape[0]].T
 
                 soundfile.write(os.path.join(
-                    'encoded', scenario + '_' + reverb + '_' + recording_rot +
+                    OUTDIR, scenario + '_' + reverb + '_' + recording_rot +
                     '_' + discrete_beams + '_amb_mic.wav'),
                                 amb_mic_td,
                                 fs,
@@ -250,7 +252,7 @@ for recording_rot in ['static', 'dynamic']:
                         foa = (inv_rotmat1[:, None, :, :] @ foa[..., None])[..., 0]
                         foa_td = overlap_add(foa.T, HOPSIZE)[:, HOPSIZE:HOPSIZE + mic.shape[0]].T
                         soundfile.write(os.path.join(
-                            'encoded', scenario + '_' + reverb + '_' + recording_rot +
+                            OUTDIR, scenario + '_' + reverb + '_' + recording_rot +
                             '_' + discrete_beams + '_' + ambient_rendering + '.wav'),
                                         foa_td,
                                         fs,
@@ -261,7 +263,7 @@ for recording_rot in ['static', 'dynamic']:
                             Y_norot_bfbr[None, None, :, :] * y_bfbr[..., None], -2)
                         enc_bfbr_td = overlap_add(enc_bfbr.T, HOPSIZE)[:, HOPSIZE:HOPSIZE + mic.shape[0]].T
                         soundfile.write(os.path.join(
-                            'encoded', scenario + '_' + reverb + '_' + recording_rot +
+                            OUTDIR, scenario + '_' + reverb + '_' + recording_rot +
                             '_' + discrete_beams + '_' + ambient_rendering + '.wav'),
                                         enc_bfbr_td,
                                         fs,
@@ -278,7 +280,7 @@ for recording_rot in ['static', 'dynamic']:
                     ref = signal.resample_poly(ref, fs, fs_ref)
 
                 soundfile.write(os.path.join(
-                    'encoded',
+                    OUTDIR,
                     scenario + '_' + reverb + '_' + recording_rot + '_ref.wav'),
                                 ref[:, :36],
                                 fs,
