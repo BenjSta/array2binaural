@@ -14,10 +14,11 @@ A demo of the listening experiment stimuli is available here: [https://array2bin
 
 ## Instructions for Stimulus Generation / Filter Computation / Instrumental Evaluation
 ### Environment
-- Install the packages in `requirements.txt`.
+- Create a Python 3.11 environment; install pip.
+- Install the packages in `requirements.txt` using pip.
 
 ### Download third-party data
-- Download the Easycom array impulse responses data from [https://spear2022data.blob.core.windows.net/spear-data/Device_ATFs.h5](https://spear2022data.blob.core.windows.net/spear-data/Device_ATFs.h5) into `origin_array_tf_data/`.
+- Download the Easycom array impulse response data from [https://spear2022data.blob.core.windows.net/spear-data/Device_ATFs.h5](https://spear2022data.blob.core.windows.net/spear-data/Device_ATFs.h5) into `origin_array_tf_data/`.
 - Download the boundary element method (BEM)-simulated array transfer functions by McCormack et al. from [https://zenodo.org/records/6401603/files/HMD_SensorArrayResponses.mat](https://zenodo.org/records/6401603/files/HMD_SensorArrayResponses.mat) into `origin_array_tf_data/`
 - Download the EBU-SQAM snippets by running `simulate_scenarios_and_mic_signals/utils/download_and_cut_ebu_sqam.py` (without changing the working directory, i.e., from `./`).
 
@@ -26,7 +27,7 @@ A demo of the listening experiment stimuli is available here: [https://array2bin
 - Run the script `encode_array_into_sh.py` to encode the Easycom array transfer functions into the spherical harmonics domain. This will create the file `Easycom_array_32000Hz_o25_22samps_delay.npy`. 
 
 ### Simulate the scenarios and microphone signals
-- (Optional: Run the script `simulate_scenarios_and_mic_signals/generate_stimuli.py` from `./`. This will re-create the 6 Ambisonic `wav` files in `simulate_scenarios_and_mic_signals/audio_o25/`, however, with different seed for the diffuse part of the impulse response.)
+- (Optional: Run the script `simulate_scenarios_and_mic_signals/generate_stimuli.py` from `./`. This will create 6 25th-order Ambisonic reference `wav` files in `simulate_scenarios_and_mic_signals/audio_o25/`.
 
 - Run the script `simulate_scenarios_and_mic_signals/create_mic_signals.py` from `./`. This will create simulated microphone signals in the `simulate_scenarios_and_mic_signals/rendered_mic` folder.
 
