@@ -1,4 +1,4 @@
-import numpy as np  
+import numpy as np
 import numpy.matlib as ml
 import scipy.special as spec
 from scipy.spatial.transform import Rotation
@@ -9,7 +9,7 @@ Ambisonics utility functions implemented by Stefan Riedel and Franz Zotter, IEM 
 """
 
 
-def sh_xyz(nmax,ux,uy,uz):
+def sh_xyz(nmax, ux, uy, uz):
     """Returns sh-matrix, evaluated at ux,uy,uz up to order nmax.
 
     Args:
@@ -23,31 +23,49 @@ def sh_xyz(nmax,ux,uy,uz):
     """
 
     nmax = int(nmax)
-    Y=np.zeros((ux.size,(nmax+1)**2))
-    Y[:,0]=np.sqrt(1/(4*np.pi))
-    if(nmax == 0):
+    Y = np.zeros((ux.size, (nmax + 1) ** 2))
+    Y[:, 0] = np.sqrt(1 / (4 * np.pi))
+    if nmax == 0:
         return Y
-    Y[:,2]=np.sqrt(3/(4*np.pi))*uz.reshape(uz.size)
-    for n in range(1,nmax):
-        Y[:,(n+1)*(n+2)] = -np.sqrt((2*n+3)/(2*n-1))*n/(n+1) * Y[:,(n-1)*n] +\
-                   np.sqrt((2*n+1)*(2*n+3))/(n+1) * uz.flat[:] * Y[:,n*(n+1)]
-    
+    Y[:, 2] = np.sqrt(3 / (4 * np.pi)) * uz.reshape(uz.size)
+    for n in range(1, nmax):
+        Y[:, (n + 1) * (n + 2)] = (
+            -np.sqrt((2 * n + 3) / (2 * n - 1)) * n / (n + 1) * Y[:, (n - 1) * n]
+            + np.sqrt((2 * n + 1) * (2 * n + 3))
+            / (n + 1)
+            * uz.flat[:]
+            * Y[:, n * (n + 1)]
+        )
+
     for i in range(uz.size):
-        for n in range(0,nmax):
-            for m in range(n+1):
-                if m==0:
-                    Y[i,(n+1)*(n+2)+(m+1)*np.array((1,-1))] = np.sqrt(2*(2*n+3)*(2*n+1)/((n+m+1)*(n+m+2))) * \
-                                Y[i,n*(n+1)] * \
-                                np.array((ux.flat[i],uy.flat[i]))
+        for n in range(0, nmax):
+            for m in range(n + 1):
+                if m == 0:
+                    Y[i, (n + 1) * (n + 2) + (m + 1) * np.array((1, -1))] = (
+                        np.sqrt(
+                            2 * (2 * n + 3) * (2 * n + 1) / ((n + m + 1) * (n + m + 2))
+                        )
+                        * Y[i, n * (n + 1)]
+                        * np.array((ux.flat[i], uy.flat[i]))
+                    )
                 else:
-                    Y[i,(n+1)*(n+2)+(m+1)*np.array((1,-1))] = np.sqrt((2*n+3)*(2*n+1)/((n+m+1)*(n+m+2))) * \
-                                Y[i,n*(n+1)+m*np.array((1,-1))].dot(
-                                  np.array(((ux.flat[i],uy.flat[i]),(-uy.flat[i],ux.flat[i]))))
-                if (m+1<=n-1):
-                    Y[i,(n+1)*(n+2)+(m+1)*np.array((1,-1))] += \
-                         np.sqrt((2*n+3)*(n-m-1)*(n-m)/((2*n-1)*(n+m+1)*(n+m+2))) * \
-                        Y[i,(n-1)*n+(m+1)*np.array((1,-1))]
+                    Y[i, (n + 1) * (n + 2) + (m + 1) * np.array((1, -1))] = np.sqrt(
+                        (2 * n + 3) * (2 * n + 1) / ((n + m + 1) * (n + m + 2))
+                    ) * Y[i, n * (n + 1) + m * np.array((1, -1))].dot(
+                        np.array(((ux.flat[i], uy.flat[i]), (-uy.flat[i], ux.flat[i])))
+                    )
+                if m + 1 <= n - 1:
+                    Y[i, (n + 1) * (n + 2) + (m + 1) * np.array((1, -1))] += (
+                        np.sqrt(
+                            (2 * n + 3)
+                            * (n - m - 1)
+                            * (n - m)
+                            / ((2 * n - 1) * (n + m + 1) * (n + m + 2))
+                        )
+                        * Y[i, (n - 1) * n + (m + 1) * np.array((1, -1))]
+                    )
     return Y
+
 
 def sh_azi_zen(nmax, azi, zen):
     """Returns sh-matrix, evaluated at azi and zen (in radians) up to order nmax.
@@ -64,6 +82,7 @@ def sh_azi_zen(nmax, azi, zen):
     xyz = sph2cart(azi, zen)
     return sh_xyz(nmax, xyz[0], xyz[1], xyz[2])
 
+
 def sph2cart(azi, zen):
     """Convert spherical to cartesian coordinates.
 
@@ -75,15 +94,16 @@ def sph2cart(azi, zen):
         ndarray: cartesian coordinates array
     """
 
-    if(azi.size != zen.size):
+    if azi.size != zen.size:
         print("Azimuth and Zenith angles don't match in size!")
-    
+
     ux = np.sin(zen) * np.cos(azi)
     uy = np.sin(zen) * np.sin(azi)
     uz = np.cos(zen)
-    
-    xyz = np.array([ux,uy,uz])
+
+    xyz = np.array([ux, uy, uz])
     return xyz
+
 
 def SN3D_to_N3D(N):
     """computing renorm weights for adapting format conventions:
@@ -95,10 +115,11 @@ def SN3D_to_N3D(N):
         ndarray: renorm weights
     """
 
-    [n,m] = sh_indices(N)
-    weights =  np.sqrt(2*n +1) / np.sqrt(4*np.pi) 
+    [n, m] = sh_indices(N)
+    weights = np.sqrt(2 * n + 1) / np.sqrt(4 * np.pi)
 
     return weights
+
 
 def N3D_to_SN3D(N):
     """computing renorm weights for adapting format conventions:
@@ -110,34 +131,36 @@ def N3D_to_SN3D(N):
         ndarray: renorm weights
     """
 
-    [n,m] = sh_indices(N)
-    weights = np.sqrt(4*np.pi) /  np.sqrt(2*n +1)
+    [n, m] = sh_indices(N)
+    weights = np.sqrt(4 * np.pi) / np.sqrt(2 * n + 1)
 
     return weights
+
 
 def sh_n2nm_vec(win):
     """expands from n vector of length N+1 to full nm vector of length (N+1)**2
 
     Args:
-        win (ndarray): order window / weights 
+        win (ndarray): order window / weights
 
     Returns:
         ndarray: order and degree window / weights
     """
 
-    if(np.size(win) == 1):
+    if np.size(win) == 1:
         return win
 
     win = np.squeeze(win)
 
-    N = win.size -1
-    nm_win = np.zeros(((N+1)**2), win.dtype)
+    N = win.size - 1
+    nm_win = np.zeros(((N + 1) ** 2), win.dtype)
 
-    for n in range(N+1):
-        for m in range(-n,n+1):
-            nm_win[n*(n+1) + m] = win[n]
+    for n in range(N + 1):
+        for m in range(-n, n + 1):
+            nm_win[n * (n + 1) + m] = win[n]
 
     return nm_win
+
 
 def sh_indices(nmax):
     """Get order n = [0,1,1,1,...] and degree m = [0,-1,0,1,...] indices up to order nmax.
@@ -149,11 +172,12 @@ def sh_indices(nmax):
         ndarray: order n indices and degree m indices
     """
 
-    k = np.arange(0, (nmax+1)**2)
+    k = np.arange(0, (nmax + 1) ** 2)
     n = np.floor(np.sqrt(k))
     m = k - n**2 - n
 
-    return [n,m]
+    return [n, m]
+
 
 def sh_decoder_mixo(N, mixo_idx, azi, zen):
     """Returns zero-padded pseudo-inverse Y_pinv with non-zero mixo idxs.
@@ -172,9 +196,10 @@ def sh_decoder_mixo(N, mixo_idx, azi, zen):
     Y_ls_mixo = Y_ls[:, mixo_idx]
     Ypinv_ls_mixo = np.linalg.pinv(Y_ls_mixo)
     Ypinv_ls = np.zeros(Y_ls.transpose().shape)
-    Ypinv_ls[mixo_idx,:] = Ypinv_ls_mixo
+    Ypinv_ls[mixo_idx, :] = Ypinv_ls_mixo
 
     return Ypinv_ls
+
 
 def renormalize(N):
     """computing renorm weights for adapting format conventions:
@@ -190,13 +215,14 @@ def renormalize(N):
         ndarray: renorm weights
     """
 
-    [n,m] = sh_indices(N)
+    [n, m] = sh_indices(N)
     one_minus2deltam = np.ones(np.size(m))
-    idx_negm = np.where(m<0)
+    idx_negm = np.where(m < 0)
     one_minus2deltam[idx_negm] = -1
-    renormalize = (-1)**m * one_minus2deltam / np.sqrt(2*n +1)
+    renormalize = (-1) ** m * one_minus2deltam / np.sqrt(2 * n + 1)
 
     return renormalize
+
 
 def renormalize_matrix(Y, N):
     """adapting format conventions:
@@ -215,12 +241,13 @@ def renormalize_matrix(Y, N):
 
     renorm = renormalize(N)
 
-    if(np.shape(Y)[1] == (N+1)**2):
-        Y = np.dot(Y, np.diag(1/renorm))
+    if np.shape(Y)[1] == (N + 1) ** 2:
+        Y = np.dot(Y, np.diag(1 / renorm))
     else:
-        Y = np.dot(Y.T, np.diag(1/renorm)).T
-    
+        Y = np.dot(Y.T, np.diag(1 / renorm)).T
+
     return Y
+
 
 def mixo_weights(mixo_idx):
     """computes corrected mixed-order max-rE weights.
@@ -233,35 +260,36 @@ def mixo_weights(mixo_idx):
     """
 
     N = (np.sqrt(mixo_idx[-1] + 1) - 1).astype(int)
-    y = sh_azi_zen(N, np.array([0]), np.array([np.pi/2]))
+    y = sh_azi_zen(N, np.array([0]), np.array([np.pi / 2]))
     w = maxre_sph(N)
     win = sh_n2nm_vec(w)
-    k = np.arange((N+1)**2)     # linear sh index: 0,1,...,(N+1)**2 - 1
-    n = np.floor(np.sqrt(k))    # n index: 0,1,1,1,...,N
-    m = k - n * (n+1)           # m index: 0,-1,0,1,...,N
+    k = np.arange((N + 1) ** 2)  # linear sh index: 0,1,...,(N+1)**2 - 1
+    n = np.floor(np.sqrt(k))  # n index: 0,1,1,1,...,N
+    m = k - n * (n + 1)  # m index: 0,-1,0,1,...,N
 
-    idx_mixo=np.zeros((N+1)**2)
-    idx_mixo[mixo_idx]=1
-    cm=np.zeros(N+1)
-    c=np.zeros((N+1)**2)
+    idx_mixo = np.zeros((N + 1) ** 2)
+    idx_mixo[mixo_idx] = 1
+    cm = np.zeros(N + 1)
+    c = np.zeros((N + 1) ** 2)
 
-    for mi in range(N+1):
-        idx_m = (m==mi).astype(int)
-        #y=np.squeeze(y)
-        a1 = np.dot(y, np.dot(np.diag(win*idx_mixo*idx_m), y.transpose()))
-        a2 = np.dot(y, np.dot(np.diag(win*idx_m), y.transpose()))
-        cm[mi] = a2/a1
-        idx_abs_m = np.nonzero((np.abs(m)==mi))
-        #idx_abs_m = np.nonzero(idx_abs_m)
-        c[idx_abs_m] = np.squeeze(a2/a1)
+    for mi in range(N + 1):
+        idx_m = (m == mi).astype(int)
+        # y=np.squeeze(y)
+        a1 = np.dot(y, np.dot(np.diag(win * idx_mixo * idx_m), y.transpose()))
+        a2 = np.dot(y, np.dot(np.diag(win * idx_m), y.transpose()))
+        cm[mi] = a2 / a1
+        idx_abs_m = np.nonzero((np.abs(m) == mi))
+        # idx_abs_m = np.nonzero(idx_abs_m)
+        c[idx_abs_m] = np.squeeze(a2 / a1)
 
     # apply correction vector c
-    win=c*win
-    #return only mixed-order entries, and additionally zero-padded version
-    zero_pad = np.zeros((N+1)**2)
+    win = c * win
+    # return only mixed-order entries, and additionally zero-padded version
+    zero_pad = np.zeros((N + 1) ** 2)
     zero_pad[mixo_idx] = 1
     win_padded = win * zero_pad
-    return [win[mixo_idx] , win_padded]
+    return [win[mixo_idx], win_padded]
+
 
 def maxre_sph(N):
     """max-rE weights (3D / spherical).
@@ -273,14 +301,15 @@ def maxre_sph(N):
         ndarray: (N+1) max-rE weights
     """
 
-    thetaE = 137.9 / (N+1.52)
+    thetaE = 137.9 / (N + 1.52)
     rE = np.cos(thetaE / 180 * np.pi)
     win = legendre_u(N, rE)
-    
+
     return win
 
+
 def legendre_u(nmax, costheta):
-    """returns the values of the unassociated legendre 
+    """returns the values of the unassociated legendre
     polynomials up to order nmax at values costheta.
     This is a recursive implementation after Franz Zotter, IEM Graz
     Stefan Riedel, IEM Graz, 2020
@@ -294,34 +323,37 @@ def legendre_u(nmax, costheta):
     """
 
     if isinstance(costheta, (list, tuple, np.ndarray)):
-        P = np.zeros((len(costheta),nmax+1))
+        P = np.zeros((len(costheta), nmax + 1))
     else:
-        P = np.zeros((1,nmax+1))
+        P = np.zeros((1, nmax + 1))
 
     # Zeroth order polynomial is constant
-    P[:,0] = 1
+    P[:, 0] = 1
 
     # First oder polynomial is linear
     if nmax > 0:
-        P[:,1] = costheta
+        P[:, 1] = costheta
 
-    for n in range (1,nmax):
-        P[:,n+1] = ((2*n+1) * np.multiply(costheta, P[:, n]) - n*P[:, n-1] ) / (n+1)
+    for n in range(1, nmax):
+        P[:, n + 1] = (
+            (2 * n + 1) * np.multiply(costheta, P[:, n]) - n * P[:, n - 1]
+        ) / (n + 1)
 
     return np.squeeze(P)
-    # is equal too.. 
-    #if P.shape[0] == 1:
-       # return np.squeeze(P)
-    #else:
-       # return P  
-    # as np.squeeze does nothing to true multidimensional arrays   
+    # is equal too..
+    # if P.shape[0] == 1:
+    # return np.squeeze(P)
+    # else:
+    # return P
+    # as np.squeeze does nothing to true multidimensional arrays
+
 
 def farfield_extrapolation_filters(N, r0, fs, Nfft):
     """Extrapolate pressure in SH domain at r0 to far-field pressure by means of these filters.
 
     Args:
         N (int): SH order
-        r0 (float): start radius r0 to far-field 
+        r0 (float): start radius r0 to far-field
         fs (float): sampling rate
         Nfft (int): FFT size
 
@@ -331,17 +363,17 @@ def farfield_extrapolation_filters(N, r0, fs, Nfft):
 
     R = r0
     c = 343
-    f = np.linspace(0,fs/2, int(Nfft/2+1))
+    f = np.linspace(0, fs / 2, int(Nfft / 2 + 1))
     f[0] = f[1] / 4
-    k = 2*np.pi*f / c
-    
-    hn = np.zeros((len(f), N+1), dtype=complex)
-    H = np.zeros((len(f), N+1), dtype=complex)
+    k = 2 * np.pi * f / c
 
-    for n in range(N+1):
-        hn[:,n] = (1 / k) * (1j**(n+1))     # far-field radial tern
+    hn = np.zeros((len(f), N + 1), dtype=complex)
+    H = np.zeros((len(f), N + 1), dtype=complex)
 
-    h2 = sph_hankel2(k*R, N) * ml.repmat(np.exp(1j*k*R), N+1, 1).transpose() 
+    for n in range(N + 1):
+        hn[:, n] = (1 / k) * (1j ** (n + 1))  # far-field radial tern
+
+    h2 = sph_hankel2(k * R, N) * ml.repmat(np.exp(1j * k * R), N + 1, 1).transpose()
     H = (hn / h2) / R
 
     H[0, 1:] = 0
@@ -350,7 +382,8 @@ def farfield_extrapolation_filters(N, r0, fs, Nfft):
 
     return h
 
-def cap_window(alpha,N):
+
+def cap_window(alpha, N):
     """the coefficients for a sphere cap window function,
     the sphere cap filter is calculated from:
     ratio between azimuthally ("rectular") sphere cap and dirac delta distribution
@@ -365,21 +398,22 @@ def cap_window(alpha,N):
         ndarray: SH cap coefficients
     """
 
-    alpha=np.squeeze(alpha)
-    w=np.zeros((alpha.size,N+1))
+    alpha = np.squeeze(alpha)
+    w = np.zeros((alpha.size, N + 1))
 
     # window computation:
-    P=legendre_u(N, np.cos(alpha/2))
+    P = legendre_u(N, np.cos(alpha / 2))
     if alpha.size == 1:
         P = np.array([P])
 
-    z1=np.cos(alpha/2)
+    z1 = np.cos(alpha / 2)
 
-    w[:,0]=1-P[:,1]
-    for n in range(1,N+1):
-        w[:,n]=( -z1 * P[:,n] + P[:,n-1] ) / (n+1)
-    
+    w[:, 0] = 1 - P[:, 1]
+    for n in range(1, N + 1):
+        w[:, n] = (-z1 * P[:, n] + P[:, n - 1]) / (n + 1)
+
     return np.squeeze(w)
+
 
 def sph_hankel1(x, nmax):
     """evaluates all spherical Hankel functions of
@@ -396,6 +430,7 @@ def sph_hankel1(x, nmax):
 
     return sph_bessel(x, nmax) + 1j * sph_neumann(x, nmax)
 
+
 def sph_hankel1_diff(x, nmax):
     """evaluates all derivatives of spherical Hankel functions of
     the first kind (part of the singular solution)
@@ -411,6 +446,7 @@ def sph_hankel1_diff(x, nmax):
 
     return sph_bessel_diff(x, nmax) + 1j * sph_neumann_diff(x, nmax)
 
+
 def sph_hankel2(x, nmax):
     """evaluates all spherical Hankel functions of
     the second kind up to the degree nmax
@@ -425,6 +461,7 @@ def sph_hankel2(x, nmax):
 
     return np.conj(sph_hankel1(x, nmax))
 
+
 def sph_hankel2_diff(x, nmax):
     """evaluates all derivatives of the spherical Hankel functions of
     the second kind up to the degree nmax
@@ -434,10 +471,11 @@ def sph_hankel2_diff(x, nmax):
         nmax (int): max SH order
 
     Returns:
-        ndarray: [len(x), nmax+1]            
+        ndarray: [len(x), nmax+1]
     """
 
     return np.conj(sph_hankel1_diff(x, nmax))
+
 
 def sph_bessel(x, nmax):
     """evaluates all spherical Bessel functions of
@@ -448,14 +486,15 @@ def sph_bessel(x, nmax):
         nmax (int): max SH order
 
     Returns:
-        ndarray: [len(x), nmax+1]            
+        ndarray: [len(x), nmax+1]
     """
 
-    j_n = np.zeros((x.size, nmax+1))
-    for n in range (0, nmax+1):
-        j_n[:,n] = spec.spherical_jn(n, x)
+    j_n = np.zeros((x.size, nmax + 1))
+    for n in range(0, nmax + 1):
+        j_n[:, n] = spec.spherical_jn(n, x)
 
     return j_n
+
 
 def sph_bessel_diff(x, nmax):
     """evaluates all derivatives of spherical Bessel functions of
@@ -466,14 +505,15 @@ def sph_bessel_diff(x, nmax):
         nmax (int): max SH order
 
     Returns:
-        ndarray: [len(x), nmax+1]            
+        ndarray: [len(x), nmax+1]
     """
 
-    j_n = np.zeros((x.size, nmax+1))
-    for n in range (0, nmax+1):
-        j_n[:,n] = spec.spherical_jn(n, x, True)
+    j_n = np.zeros((x.size, nmax + 1))
+    for n in range(0, nmax + 1):
+        j_n[:, n] = spec.spherical_jn(n, x, True)
 
     return j_n
+
 
 def sph_neumann(x, nmax):
     """evaluates all spherical Neumann functions (Bessel functions of
@@ -484,14 +524,15 @@ def sph_neumann(x, nmax):
         nmax (int): max SH order
 
     Returns:
-        ndarray: [len(x), nmax+1]            
+        ndarray: [len(x), nmax+1]
     """
 
-    y_n = np.zeros((x.size, nmax+1))
-    for n in range (0, nmax+1):
-        y_n[:,n] = spec.spherical_yn(n, x)
+    y_n = np.zeros((x.size, nmax + 1))
+    for n in range(0, nmax + 1):
+        y_n[:, n] = spec.spherical_yn(n, x)
 
     return y_n
+
 
 def sph_neumann_diff(x, nmax):
     """evaluates all derivatives of spherical Neumann functions (Bessel functions of
@@ -502,31 +543,33 @@ def sph_neumann_diff(x, nmax):
         nmax (int): max SH order
 
     Returns:
-        ndarray: [len(x), nmax+1]            
+        ndarray: [len(x), nmax+1]
     """
-    
-    y_n = np.zeros((x.size, nmax+1))
-    for n in range (0, nmax+1):
-        y_n[:,n] = spec.spherical_yn(n, x, True)
+
+    y_n = np.zeros((x.size, nmax + 1))
+    for n in range(0, nmax + 1):
+        y_n[:, n] = spec.spherical_yn(n, x, True)
 
     return y_n
 
 
 # rotation matrices (ported by Benjamin Stahl)
 def p_func(i, l, a, b, r1, rlm1):
-    ri1 = r1[... ,i + 1, 2]
-    rim1 = r1[..., i+1, 0]
-    ri0 = r1[..., i+1, 1]
+    ri1 = r1[..., i + 1, 2]
+    rim1 = r1[..., i + 1, 0]
+    ri0 = r1[..., i + 1, 1]
 
     if b == -l:
         return ri1 * rlm1[..., a + l - 1, 0] + rim1 * rlm1[..., a + l - 1, 2 * l - 2]
-    elif b == l: 
-        return ri1 * rlm1[..., a + l - 1,  2 * l - 2] - rim1 * rlm1[..., a + l - 1, 0]
+    elif b == l:
+        return ri1 * rlm1[..., a + l - 1, 2 * l - 2] - rim1 * rlm1[..., a + l - 1, 0]
     else:
         return ri0 * rlm1[..., a + l - 1, b + l - 1]
 
+
 def u_func(l, m, n, r1, rlm1):
     return p_func(0, l, m, n, r1, rlm1)
+
 
 def v_func(l, m, n, r1, rlm1):
     if m == 0:
@@ -541,23 +584,23 @@ def v_func(l, m, n, r1, rlm1):
         else:
             return p0 - p_func(-1, l, 1 - m, n, r1, rlm1)
     else:
-        p1 = p_func (-1, l, -m - 1, n, r1, rlm1)
+        p1 = p_func(-1, l, -m - 1, n, r1, rlm1)
         if m == -1:
-            return p1 * np.sqrt (2)
+            return p1 * np.sqrt(2)
         else:
             return p1 + p_func(1, l, m + 1, n, r1, rlm1)
+
 
 def w_func(l, m, n, r1, rlm1):
     if m > 0:
         p0 = p_func(1, l, m + 1, n, r1, rlm1)
-        p1 = p_func (-1, l, -m - 1, n, r1, rlm1)
+        p1 = p_func(-1, l, -m - 1, n, r1, rlm1)
         return p0 + p1
     elif m < 0:
-        p0 = p_func (1, l, m - 1, n, r1, rlm1)
-        p1 = p_func (-1, l, 1 - m, n, r1, rlm1)
+        p0 = p_func(1, l, m - 1, n, r1, rlm1)
+        p1 = p_func(-1, l, 1 - m, n, r1, rlm1)
         return p0 - p1
     return 0
-
 
 
 def calculate_rotation_matrix(order, yaw, pitch, roll):
@@ -565,10 +608,12 @@ def calculate_rotation_matrix(order, yaw, pitch, roll):
     yaw_flat = yaw.flatten()
     pitch_flat = pitch.flatten()
     roll_flat = roll.flatten()
-    rot_mat = Rotation.from_euler('ZYX', np.stack([yaw_flat, pitch_flat, roll_flat], axis=-1)).as_matrix()
+    rot_mat = Rotation.from_euler(
+        "ZYX", np.stack([yaw_flat, pitch_flat, roll_flat], axis=-1)
+    ).as_matrix()
 
     rot_mat = np.reshape(rot_mat, yaw_shape + (3, 3))
-    rot_mat_sh = np.zeros(yaw.shape + ((order+1)**2, (order+1)**2))
+    rot_mat_sh = np.zeros(yaw.shape + ((order + 1) ** 2, (order + 1) ** 2))
     rot_mat_sh[..., 0, 0] = 1
 
     r1 = np.zeros(yaw.shape + (3, 3))
@@ -582,25 +627,32 @@ def calculate_rotation_matrix(order, yaw, pitch, roll):
     r1[..., 2, 1] = rot_mat[..., 0, 2]
     r1[..., 2, 2] = rot_mat[..., 0, 0]
 
-
-    rot_mat_sh[..., 1:4, 1:4] = r1 
+    rot_mat_sh[..., 1:4, 1:4] = r1
 
     offset = 4
     rlm1 = r1
-    for l in range(2, order+1):   
-        #Rl = order_matrices[l]
-        rl = np.zeros(yaw.shape + (2*l+1, 2*l+1))
-        for m in range(-l, l+1):
-            for n in range(-l, l+1):
+    for l in range(2, order + 1):
+        # Rl = order_matrices[l]
+        rl = np.zeros(yaw.shape + (2 * l + 1, 2 * l + 1))
+        for m in range(-l, l + 1):
+            for n in range(-l, l + 1):
                 d = int(m == 0)
                 if abs(n) == l:
                     denom = (2 * l) * (2 * l - 1)
                 else:
                     denom = l * l - n * n
 
-                u = np.sqrt ((l * l - m * m) / denom)
-                v = np.sqrt ((1.0 + d) * (l + abs (m) - 1.0) * (l + abs (m)) / denom) * (1.0 - 2.0 * d) * 0.5
-                w = np.sqrt ((l - abs (m) - 1.0) * (l - abs (m)) / denom) * (1.0 - d) * (-0.5)
+                u = np.sqrt((l * l - m * m) / denom)
+                v = (
+                    np.sqrt((1.0 + d) * (l + abs(m) - 1.0) * (l + abs(m)) / denom)
+                    * (1.0 - 2.0 * d)
+                    * 0.5
+                )
+                w = (
+                    np.sqrt((l - abs(m) - 1.0) * (l - abs(m)) / denom)
+                    * (1.0 - d)
+                    * (-0.5)
+                )
 
                 if u != 0:
                     u *= u_func(l, m, n, r1, rlm1)
@@ -610,7 +662,6 @@ def calculate_rotation_matrix(order, yaw, pitch, roll):
                     w *= w_func(l, m, n, r1, rlm1)
 
                 rl[..., m + l, n + l] = u + v + w
-        
 
         rot_mat_sh[..., offset : offset + 2 * l + 1, offset : offset + 2 * l + 1] = rl
         offset += 2 * l + 1
