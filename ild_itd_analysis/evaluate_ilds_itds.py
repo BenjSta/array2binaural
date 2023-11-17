@@ -1,17 +1,20 @@
+from pyfilterbank import gammatone
+from pyfilterbank import GammatoneFilterbank
+import matplotlib.pyplot as plt
 import numpy as np
 import spaudiopy
 import soundfile
 import scipy.signal as signal
+import os
+import sys
+dirpath = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(dirpath)
+sys.path.append(parent)
 from ambisonics import calculate_rotation_matrix
-import matplotlib.pyplot as plt
-import cupy as cp
-from pyfilterbank import GammatoneFilterbank
-from pyfilterbank import gammatone
 
-DIFF = 0
-DYN = 20
-
-MIC_AMBI_PATH = 'Easycom_array_32000Hz_o25_22samps_delay.npy'
+PLOT_DB_RANGE = 20
+MIC_AMBI_PATH = os.path.join(
+    parent, 'Easycom_array_32000Hz_o25_22samps_delay.npy')
 fs = 32000
 array_sh_delay = 22  # samples
 array_sh = np.load(MIC_AMBI_PATH)
@@ -74,11 +77,9 @@ for ROTATION, row_ind in zip([0, 90], [0, 3]):
                                 np.pi / 2, 'real')
     D = []
     for i in range(Y.shape[0]):
-        D.append(
-            cp.sum(
-                cp.asarray(Y[None, i, :, None]).astype('float32') *
-                cp.asarray(array_sh[:, :, :]).astype('float32'), -2).get())
+        D.append(np.sum(Y[None, i, :, None] * array_sh[:, :, :], -2))
     D = np.stack(D, -2)
+    
     Df = np.fft.rfft(D, NFFT, 0)
     ArrSHf = np.fft.rfft(array_sh, NFFT, 0)
     diff_cov = 1 / (np.pi * 4) * np.sum(
@@ -88,7 +89,8 @@ for ROTATION, row_ind in zip([0, 90], [0, 3]):
                                         np.array([0]))
     r1i = np.linalg.inv(rotmat1)
 
-    hrir, fs_hrirs = soundfile.read('compute_emagls2_filters/irsOrd5.wav')
+    hrir, fs_hrirs = soundfile.read(os.path.join(
+        parent, 'compute_emagls2_filters/irsOrd5.wav'))
     hrir = signal.resample_poly(hrir, fs, fs_hrirs, axis=0) * fs_hrirs / fs
     hrir_delay = np.argmax(np.abs(hrir[:, 0]))
     nm = np.arange(0, hrir.shape[1])
@@ -110,7 +112,7 @@ for ROTATION, row_ind in zip([0, 90], [0, 3]):
     Hr = (Y_norot @ right.T).T
 
     fvec = np.arange(NFFT // 2 + 1) / NFFT * fs
-    #fvec_gfb = fvec
+    # fvec_gfb = fvec
     Hlf = np.fft.rfft(Hl, n=NFFT, axis=0)
     Hrf = np.fft.rfft(Hr, n=NFFT, axis=0)
 
@@ -181,9 +183,9 @@ for ROTATION, row_ind in zip([0, 90], [0, 3]):
     rot_filter *= np.exp(-1j * 2 * np.pi * fvec * 139 / 48000)
 
     Hl_emagls_f = np.sum(rot_filter[:, 0, None, :].T * Df,
-                         -1)  #np.fft.rfft(Hl_emagls, axis=0, n=NFFT)
+                         -1)  # np.fft.rfft(Hl_emagls, axis=0, n=NFFT)
     Hr_emagls_f = np.sum(rot_filter[:, 1, None, :].T * Df,
-                         -1)  #np.fft.rfft(Hr_emagls, axis=0, n=NFFT)
+                         -1)  # np.fft.rfft(Hr_emagls, axis=0, n=NFFT)
     emagls_diff_l = np.real(rot_filter[:, 0, None, :].T @ diff_cov @ np.conj(
         rot_filter[None, :, 0, :].T))
     emagls_diff_r = np.real(rot_filter[:, 1, None, :].T @ diff_cov @ np.conj(
@@ -289,32 +291,32 @@ for ROTATION, row_ind in zip([0, 90], [0, 3]):
         np.fft.irfft(gfbmat[:, :, None] * Hlf[None, :, :] *
                      np.conj(gfbmat[:, :, None] * Hrf[None, :, :]),
                      axis=1), ROLL, 1),
-                         axis=1) - ROLL) / fs
+        axis=1) - ROLL) / fs
     itd_emagls2 = (np.argmax(np.roll(
         np.fft.irfft(gfbmat[:, :, None] * Hl_emagls_f[None, :, :] *
                      np.conj(gfbmat[:, :, None] * Hr_emagls_f[None, :, :]),
                      axis=1), ROLL, 1),
-                             axis=1) - ROLL) / fs
+        axis=1) - ROLL) / fs
     itd_ambibeams = (np.argmax(np.roll(
         np.fft.irfft(gfbmat[:, :, None] * Hl_ambibeams_f[None, :, :] *
                      np.conj(gfbmat[:, :, None] * Hr_ambibeams_f[None, :, :]),
                      axis=1), ROLL, 1),
-                               axis=1) - ROLL) / fs
+        axis=1) - ROLL) / fs
     itd_foa = (np.argmax(np.roll(
         np.fft.irfft(gfbmat[:, :, None] * Hl_foa_f[None, :, :] *
                      np.conj(gfbmat[:, :, None] * Hr_foa_f[None, :, :]),
                      axis=1), ROLL, 1),
-                         axis=1) - ROLL) / fs
+        axis=1) - ROLL) / fs
     itd_bf_res = (np.argmax(np.roll(
         np.fft.irfft(gfbmat[:, :, None] * Hl_bf_res_f[None, :, :] *
                      np.conj(gfbmat[:, :, None] * Hr_bf_res_f[None, :, :]),
                      axis=1), ROLL, 1),
-                            axis=1) - ROLL) / fs
+        axis=1) - ROLL) / fs
     itd_bf0_res = (np.argmax(np.roll(
         np.fft.irfft(gfbmat[:, :, None] * Hl_bf0_res_f[None, :, :] *
                      np.conj(gfbmat[:, :, None] * Hr_bf0_res_f[None, :, :]),
                      axis=1), ROLL, 1),
-                             axis=1) - ROLL) / fs
+        axis=1) - ROLL) / fs
 
     titles = [
         'reference', 'FOA', 'BFBR', 'MagLS', 'BF+MagLS:\nsteered at source',
@@ -336,8 +338,8 @@ for ROTATION, row_ind in zip([0, 90], [0, 3]):
                                         fvec,
                                         ild,
                                         shading='gouraud',
-                                        vmin=-DYN,
-                                        vmax=DYN,
+                                        vmin=-PLOT_DB_RANGE,
+                                        vmax=PLOT_DB_RANGE,
                                         cmap='RdBu')
 
         if ind == 0:

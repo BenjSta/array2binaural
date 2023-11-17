@@ -1,11 +1,16 @@
 import numpy as np
 import spaudiopy
 import scipy.signal as signal
+import sys
+import os
+dirpath = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(dirpath)
+sys.path.append(parent)
 from ambisonics import calculate_rotation_matrix
 
-MIC_AMBI_PATH = "Easycom_array_32000Hz_o25_22samps_delay.npy"
+MIC_AMBI_PATH = os.path.join(parent, "Easycom_array_32000Hz_o25_22samps_delay.npy")
 fs = 32000
-array_sh_delay = 22  # samples
+array_sh_delay = 22
 array_sh = np.load(MIC_AMBI_PATH)
 
 WINLEN = 640
@@ -44,8 +49,8 @@ foa_enc_td = (
 )
 
 
-np.save("ild_itd_analysis/filters/foa_encoder_f.npy", foa_enc)
-np.save("ild_itd_analysis/filters/foa_encoder.npy", foa_enc_td)
+np.save(os.path.join(dirpath, 'filters/foa_encoder_f.npy'), foa_enc)
+np.save(os.path.join(dirpath, 'filters/foa_encoder.npy'), foa_enc_td)
 
 
 diff_cov_matrix = np.sum(d[..., None] * np.conj(d[..., None, :]), -3)
@@ -124,8 +129,8 @@ for rotation in [0, 90]:
         * signal.windows.tukey(FILTLEN, 0.1)[None, :, None, None]
     )
 
-    np.save("ild_itd_analysis/filters/bfbr_rot_%d_f.npy" % rotation, W_bfbr)
-    np.save("ild_itd_analysis/filters/bfbr_rot_%d.npy" % rotation, W_bfbr_td)
+    np.save(os.path.join(dirpath, 'filters/bfbr_rot_%d_f.npy') % rotation, W_bfbr)
+    np.save(os.path.join(dirpath, 'filters/bfbr_rot_%d.npy') % rotation, W_bfbr_td)
 
     for source_dir in np.arange(0, 360, 5):
         Y = spaudiopy.sph.sh_matrix(
@@ -167,12 +172,12 @@ for rotation in [0, 90]:
             * signal.windows.tukey(FILTLEN, 0.1)[None, :, None, None]
         )
         np.save(
-            "ild_itd_analysis/filters/maxdir_azi_%d_rot_%d_f.npy"
+            os.path.join(dirpath, 'filters/maxdir_azi_%d_rot_%d_f.npy')
             % (source_dir, rotation),
             sepfilt,
         )
         np.save(
-            "ild_itd_analysis/filters/maxdir_azi_%d_rot_%d.npy"
+            os.path.join(dirpath, 'filters/maxdir_azi_%d_rot_%d.npy')
             % (source_dir, rotation),
             sepfilt_td,
         )
@@ -188,12 +193,12 @@ for rotation in [0, 90]:
             * signal.windows.tukey(FILTLEN, 0.1)[None, :, None, None]
         )
         np.save(
-            "ild_itd_analysis/filters/resfilt_azi_%d_rot_%d_f.npy"
+            os.path.join(dirpath, 'filters/resfilt_azi_%d_rot_%d_f.npy')
             % (source_dir, rotation),
             resfilt,
         )
         np.save(
-            "ild_itd_analysis/filters/resfilt_azi_%d_rot_%d.npy"
+            os.path.join(dirpath, 'filters/resfilt_azi_%d_rot_%d.npy')
             % (source_dir, rotation),
             resfilt_td,
         )

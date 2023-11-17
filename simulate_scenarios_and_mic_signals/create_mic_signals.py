@@ -4,19 +4,20 @@ import soundfile
 import scipy.signal as signal
 import os
 import sys
-DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-sys.path.insert(0, DIR)
+dirpath = os.path.dirname(os.path.abspath(__file__))
+parentpath = os.path.dirname(dirpath)
+sys.path.insert(0, parentpath)
 from ambisonics import calculate_rotation_matrix
 import librosa
 
-MIC_AMBI_PATH = 'Easycom_array_32000Hz_o25_22samps_delay.npy'
+MIC_AMBI_PATH = os.path.join(parentpath, 'Easycom_array_32000Hz_o25_22samps_delay.npy')
 fs = 32000
 array_sh_delay = 22
 array_sh = np.load(MIC_AMBI_PATH)
 
 
-AMB_FILEDIR = 'simulate_scenarios_and_mic_signals/audio_o25'
-TARGET_MIC_FILEDIR = 'simulate_scenarios_and_mic_signals/rendered_mic'
+AMB_FILEDIR = os.path.join(dirpath, 'audio_o25')
+TARGET_MIC_FILEDIR = os.path.join(dirpath, 'rendered_mic')
 ROTATION_HOPSIZE = 320
 SENSOR_NOISE = -85
 
@@ -24,8 +25,8 @@ for reverb in ['anech', 'strongrev']:
     for scenario in [
             'two_speakers_close', 'string_quartet', 
             'two_speakers_opposite']:
-        filepath = os.path.join(AMB_FILEDIR, scenario + '_' + reverb + '_ref_amb.wav')
-        amb, fs_amb = soundfile.read(filepath)
+        dirpath = os.path.join(AMB_FILEDIR, scenario + '_' + reverb + '_ref_amb.wav')
+        amb, fs_amb = soundfile.read(dirpath)
         if fs_amb != fs:
             amb = signal.resample_poly(amb, fs, fs_amb)
 

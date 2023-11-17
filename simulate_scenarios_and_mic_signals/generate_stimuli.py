@@ -4,6 +4,7 @@ import scipy.signal as signal
 from utils.room_simulation import simulate_simple_room
 from spaudiopy.utils import cart2sph
 import spaudiopy
+import os
 
 
 def compose_ambisonic_signal(source_sigs, souce_dirs, diffuse_ambi_signal,
@@ -119,6 +120,7 @@ if __name__ == '__main__':
     FS = 44100
     ROOM_SIM_MIN_IMAGE_ORDER = 2
     AMB_ORDER = 25
+    dirpath = os.path.dirname(os.path.abspath(__file__))
 
     main_room = np.array([7, 6, 3.5])
     listener_pos = np.array([3.5, 4, 1.5])
@@ -147,16 +149,16 @@ if __name__ == '__main__':
 
             if scenario == 'string_quartet':
                 violin1, _ = soundfile.read(
-                    'simulate_scenarios_and_mic_signals/source_audio/gomes_string_quartet/Mov1_Violin1_Haydn_StringQuartet_op76_n1_cut.wav'
+                    os.path.join(dirpath, 'source_audio/gomes_string_quartet/Mov1_Violin1_Haydn_StringQuartet_op76_n1_cut.wav')
                 )
                 violin2, _ = soundfile.read(
-                    'simulate_scenarios_and_mic_signals/source_audio/gomes_string_quartet/Mov1_Violin2_Haydn_StringQuartet_op76_n1_cut.wav'
+                    os.path.join(dirpath, 'source_audio/gomes_string_quartet/Mov1_Violin2_Haydn_StringQuartet_op76_n1_cut.wav')
                 )
                 viola, _ = soundfile.read(
-                    'simulate_scenarios_and_mic_signals/source_audio/gomes_string_quartet/Mov1_Viola_Haydn_StringQuartet_op76_n1_cut.wav'
+                    os.path.join(dirpath, 'source_audio/gomes_string_quartet/Mov1_Viola_Haydn_StringQuartet_op76_n1_cut.wav')
                 )
                 cello, _ = soundfile.read(
-                    'simulate_scenarios_and_mic_signals/source_audio/gomes_string_quartet/Mov1_Cello_Haydn_StringQuartet_op76_n1_cut.wav'
+                    os.path.join(dirpath, 'source_audio/gomes_string_quartet/Mov1_Cello_Haydn_StringQuartet_op76_n1_cut.wav')
                 )
                 signals = np.stack([violin1, violin2, viola, cello], -1)
                 directions = np.pi / 180 * np.array([[-90, 90], [-30, 90],
@@ -164,18 +166,18 @@ if __name__ == '__main__':
 
 
             elif scenario == 'two_speakers_close':
-                s1, _ = soundfile.read('simulate_scenarios_and_mic_signals/source_audio/ebu_sqam/50_cut.wav')
-                s2, _ = soundfile.read('simulate_scenarios_and_mic_signals/source_audio/ebu_sqam/49_cut.wav')
+                s1, _ = soundfile.read(os.path.join(dirpath, 'source_audio/ebu_sqam/50_cut.wav'))
+                s2, _ = soundfile.read(os.path.join(dirpath, 'source_audio/ebu_sqam/49_cut.wav'))
                 signals = np.stack([s1, s2], -1)
                 directions = np.pi / 180 * np.array([[-30, 90], [0, 90]]).T
 
             elif scenario == 'two_speakers_opposite':
-                s1, _ = soundfile.read('simulate_scenarios_and_mic_signals/source_audio/ebu_sqam/52_cut.wav')
-                s2, _ = soundfile.read('simulate_scenarios_and_mic_signals/source_audio/ebu_sqam/53_cut.wav')
+                s1, _ = soundfile.read(os.path.join(dirpath, 'source_audio/ebu_sqam/52_cut.wav'))
+                s2, _ = soundfile.read(os.path.join(dirpath, 'source_audio/ebu_sqam/53_cut.wav'))
             
                 signals = np.stack([s1, s2], -1)
                 directions = np.pi / 180 * np.array([[-135, 90],
                                                      [45, 70]]).T
 
-            generate_scenario(signals, 'simulate_scenarios_and_mic_signals/audio_o25/' + name, directions, room,
+            generate_scenario(signals, os.path.join(dirpath, 'audio_o25/' + name), directions, room,
                            t60, drr, listener_pos, normalise_db, FS, AMB_ORDER)
