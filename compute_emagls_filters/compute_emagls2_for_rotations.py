@@ -17,7 +17,10 @@ import torch
 
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0,'
-DEVICE = 'cuda'
+if torch.cuda.is_available():
+    DEVICE = 'cuda'
+else:
+    DEVICE = 'cpu'
 
 # load reference HRIRs from 5th-order symmetric HRTFs
 FS = 48000 # the filters are computed at 48kHz for usage with standard DAWs
@@ -42,7 +45,7 @@ dl_sh5 *= np.exp(1j * 2 * np.pi * fvec * hrir_delay / FS)[:, None]
 dr_sh5 *= np.exp(1j * 2 * np.pi * fvec * hrir_delay / FS)[:, None]
 
 # load ambisonic array impulse responses
-ir_sh = np.load(os.path.join(parentpath, 'Easycom_32000Hz_o25_22samps_delay.npy'))
+ir_sh = np.load(os.path.join(parentpath, 'Easycom_array_32000Hz_o25_22samps_delay.npy'))
 FS_ARRAY = 32000
 if FS_ARRAY != FS:
     ir_sh = FS_ARRAY / FS * signal.resample_poly(ir_sh, FS, FS_ARRAY, axis=0)
@@ -195,7 +198,7 @@ all_mls_fd = all_mls_fd.reshape(all_mls_td.shape[0],
                                all_mls_td.shape[3], -1)
 
 np.save(os.path.join(dirpath, 'xyz.npy'), gridpoints)
-np.save(os.path.join(dirpath, 'filters.npy'), all_mls_fd)
-np.save(os.path.join(dirpath, 'filters_fd.npy'), all_mls_fd_orig[..., :513])
+np.save(os.path.join(dirpath, 'filters_cut_48kHz_dft.npy'), all_mls_fd)
+np.save(os.path.join(dirpath, 'filters_32kHz_dft.npy'), all_mls_fd_orig[..., :513])
 np.save(os.path.join(dirpath, 'roll.npy'), roll[0, :])
 
