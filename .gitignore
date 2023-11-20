@@ -7,10 +7,14 @@ compute_emagls2_for_rotations/roll.npy
 simulate_scenarios_and_mic_signals/audio_o25/*
 simulate_scenarios_and_mic_signals/source_audio/ebu_sqam/*
 !simulate_scenarios_and_mic_signals/source_audio/ebu_sqam/README.md
-ild_itd_analysis/filters
+ild_itd_analysis/filters/*
 !ild_itd_analysis/filters/README.md
 Easycom_array_32000Hz_o25_22samps_delay.npy
 simulate_scenarios_and_mic_signals/rendered_mic/*
 origin_array_tf_data/*
 !origin_array_tf_data/README.md
 *.pyc
+encoded/*
+!encoded/README.md
+simulate_scenarios_and_mic_signals/audio_o25/*
+!simulate_scenarios_and_mic_signals/audio_o25/README.md

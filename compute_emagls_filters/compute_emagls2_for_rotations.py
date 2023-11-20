@@ -6,17 +6,25 @@ import soundfile
 import numpy as np
 import matplotlib.pyplot as plt
 import tqdm
+import sys
+dirpath = os.path.dirname(os.path.abspath(__file__))
+parentpath = os.path.dirname(dirpath)
+sys.path.insert(0, parentpath)
 from ambisonics import calculate_rotation_matrix
 import scipy.signal as signal
 # torch is used for fast computation on GPU (note that automatic differentiation is not used)
 import torch
 
+
 os.environ['CUDA_VISIBLE_DEVICES'] = '0,'
-DEVICE = 'cuda'
+if torch.cuda.is_available():
+    DEVICE = 'cuda'
+else:
+    DEVICE = 'cpu'
 
 # load reference HRIRs from 5th-order symmetric HRTFs
 FS = 48000 # the filters are computed at 48kHz for usage with standard DAWs
-hrir, fs = soundfile.read('compute_emagls2_for_rotations/irsOrd5.wav')
+hrir, fs = soundfile.read(os.path.join(parentpath, 'ku100_magls_sh_hrir/irsOrd5.wav'))
 hrir = signal.resample_poly(hrir, FS, fs, axis=0) * fs / FS
 hrir_delay = np.argmax(np.abs(hrir[:, 0]))
 nm = np.arange(0, hrir.shape[1])
@@ -37,7 +45,7 @@ dl_sh5 *= np.exp(1j * 2 * np.pi * fvec * hrir_delay / FS)[:, None]
 dr_sh5 *= np.exp(1j * 2 * np.pi * fvec * hrir_delay / FS)[:, None]
 
 # load ambisonic array impulse responses
-ir_sh = np.load('Easycom_32000Hz_o25_22samps_delay.npy')
+ir_sh = np.load(os.path.join(parentpath, 'Easycom_array_32000Hz_o25_22samps_delay.npy'))
 FS_ARRAY = 32000
 if FS_ARRAY != FS:
     ir_sh = FS_ARRAY / FS * signal.resample_poly(ir_sh, FS, FS_ARRAY, axis=0)
@@ -189,9 +197,8 @@ all_mls_fd = all_mls_fd.reshape(all_mls_td.shape[0],
                                all_mls_td.shape[2], 
                                all_mls_td.shape[3], -1)
 
-
-np.save('compute_emagls2_for_rotations/xyz.npy', gridpoints)
-np.save('compute_emagls2_for_rotations/filters.npy', all_mls_fd)
-np.save('compute_emagls2_for_rotations/filters_fd.npy', all_mls_fd_orig[..., :513])
-np.save('compute_emagls2_for_rotations/roll.npy', roll[0, :])
+np.save(os.path.join(dirpath, 'xyz.npy'), gridpoints)
+np.save(os.path.join(dirpath, 'filters_cut_48kHz_dft.npy'), all_mls_fd)
+np.save(os.path.join(dirpath, 'filters_32kHz_dft.npy'), all_mls_fd_orig[..., :513])
+np.save(os.path.join(dirpath, 'roll.npy'), roll[0, :])
 

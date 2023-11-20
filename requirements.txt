@@ -1,0 +1,13 @@
+numpy
+scipy
+matplotlib
+spaudiopy
+torch
+h5py
+tqdm
+joblib
+soundfile
+requests
+pyroomacoustics
+librosa
+git+https://github.com/SiggiGue/pyfilterbank.git
