@@ -2,6 +2,9 @@
 if __name__ == '__main__':
     import requests, zipfile, io, os, soundfile, shutil
     dirpath = os.path.dirname(os.path.abspath(__file__))
+    print(' ')
+    print('USER INPUT REQUIRED')
+    print(' ')
     print('This script downloads the EBU SQAM audio files from ' +
           'https://tech.ebu.ch/files/live/sites/tech/files/shared/testmaterial/SQAM_FLAC.zip. ' +
           'Only proceed if you have the rights to download these audio files. Confirm with "y" to proceed.')

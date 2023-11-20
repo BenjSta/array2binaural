@@ -19,6 +19,9 @@ fs = 32000
 array_sh_delay = 22 # samples
 array_sh = np.load(MIC_AMBI_PATH)
 
+NFFT = 1024
+fvec = np.arange(NFFT // 2 + 1) / NFFT * fs
+
 DENSITY = 1
 filtbank = GammatoneFilterbank(fs,
                                startband=-12.5,
@@ -26,11 +29,13 @@ filtbank = GammatoneFilterbank(fs,
                                density=DENSITY,
                                bandwidth_factor=1.0)
 gfbmat = []
-for f in filtbank.freqz(1024):
+for f in filtbank.freqz(NFFT):
     gfbmat.append(np.abs(f[0]))
 gfbmat = np.stack(gfbmat)
 fvec_gfb = gammatone.erbscale_to_hertz(
     np.arange(-12.5, 10, DENSITY) + 15.62144971397049)
+
+
 
 # create plot grid
 plt.close('all')
@@ -74,9 +79,6 @@ ax[4, 5].set_visible(False)
 # compute resulting ILDs and ITDs for frontal and 90° right-rotated array 
 # (= 90° (left) rotation of the soundfield)
 for ROTATION, row_ind in zip([0, 90], [0, 3]):
-    NFFT = 1024
-    fvec = np.arange(NFFT // 2 + 1) / NFFT * fs
-
     # define a grid of source direction on the equator, spacing: 5°
     source_dir = np.arange(-180, 180, 5)
 
@@ -289,18 +291,18 @@ for ROTATION, row_ind in zip([0, 90], [0, 3]):
     Hr_bf0_res_f = bf_out_r + res_out_r
 
     ## evaluate ILDs
-    ild_ref = (10 * np.log10(np.abs(np.abs(Hlf))**2) -
-               10 * np.log10(np.abs(np.abs(Hrf))**2))
-    ild_emagls2 = (10 * np.log10(np.abs(np.abs(Hl_emagls_f))**2) -
-                   10 * np.log10(np.abs(np.abs(Hr_emagls_f))**2))
-    ild_bfbr = (10 * np.log10(np.abs(np.abs(Hl_bfbr_f))**2) -
-                     10 * np.log10(np.abs(np.abs(Hr_bfbr_f))**2))
-    ild_foa = (10 * np.log10(np.abs(np.abs(Hl_foa_f))**2) -
-               10 * np.log10(np.abs(np.abs(Hr_foa_f))**2))
-    ild_bf_res = (10 * np.log10(np.abs(np.abs(Hl_bf_res_f))**2) -
-                  10 * np.log10(np.abs(np.abs(Hr_bf_res_f))**2))
-    ild_bf0_res = (10 * np.log10(np.abs(np.abs(Hl_bf0_res_f))**2) -
-                   10 * np.log10(np.abs(np.abs(Hr_bf0_res_f))**2))
+    ild_ref = (10 * np.log10(np.abs(Hlf)**2) -
+               10 * np.log10(np.abs(Hrf)**2))
+    ild_emagls2 = (10 * np.log10(np.abs(Hl_emagls_f)**2) -
+                   10 * np.log10(np.abs(Hr_emagls_f)**2))
+    ild_bfbr = (10 * np.log10(np.abs(Hl_bfbr_f)**2) -
+                     10 * np.log10(np.abs(Hr_bfbr_f)**2))
+    ild_foa = (10 * np.log10(np.abs(Hl_foa_f)**2) -
+               10 * np.log10(np.abs(Hr_foa_f)**2))
+    ild_bf_res = (10 * np.log10(np.abs(Hl_bf_res_f)**2) -
+                  10 * np.log10(np.abs(Hr_bf_res_f)**2))
+    ild_bf0_res = (10 * np.log10(np.abs(Hl_bf0_res_f)**2) -
+                   10 * np.log10(np.abs(Hr_bf0_res_f)**2))
 
     ## evaluate ITDs
     CIRCSHIFT = NFFT//2
