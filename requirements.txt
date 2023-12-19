@@ -9,5 +9,6 @@ joblib
 soundfile
 requests
 pyroomacoustics
+statsmodels
 librosa
 git+https://github.com/SiggiGue/pyfilterbank.git
