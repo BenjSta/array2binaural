@@ -143,7 +143,7 @@ angle_diff_over_methods = []
 fvec_over_methods = []
 ARRAYS = ["SphericalScatterer-5", "SphericalScatterer-7", "Easycom-5-Orig",
           "BEM-5-EncDec-ld0", "BEM-7-EncDec-ld0",
-          "Easyc-5-EncDec-ld0.1-cut-ir-search"]
+          "Easyc-5-EncDec-ld0.1-cut-ir-search", "SphericalScatterer-7-circ"]
 
 # %%
 for array_str in ARRAYS:
@@ -159,6 +159,9 @@ for array_str in ARRAYS:
     elif array_str == "SphericalScatterer-7":
         sh_array = getSphericalMicTF(25, np.concatenate([np.linspace(-np.pi / 2, np.pi / 2, 5,
                                                                      endpoint=True), np.array([0, np.pi])]), np.array([np.pi/2]*5 + [0, np.pi/2]), NFFT, FS, 0.08)
+    elif array_str == "SphericalScatterer-7-circ":
+        sh_array = getSphericalMicTF(25, np.concatenate([np.linspace(-np.pi / 2, np.pi / 2, 5,
+                                                                     endpoint=True), np.array([-5 * np.pi / 6, 5 * np.pi / 6])]), np.array([np.pi/2]*5 + [np.pi/2, np.pi/2]), NFFT, FS, 0.08)
     
     elif array_str == "Easycom-5-EncDec-ld0.1" or array_str == "Easyc-5-EncDec-ld0.1-cut-ir-search":
         if array_str != "Easyc-5-EncDec-ld0.1-cut-ir-search":
@@ -202,9 +205,9 @@ for array_str in ARRAYS:
 
 # %%
 mult = 0.8
-errors_fig = plt.figure(figsize=(13*mult, 2.8*mult))
+errors_fig = plt.figure(figsize=(14.5*mult, 2.8*mult))
 
-for plt_ind, array_ind in enumerate([5, 2, 0, 3, 1,  4]):
+for plt_ind, array_ind in enumerate([5, 2, 0, 3, 1,  4, 6]):
 
     array_str = ARRAYS[array_ind]
     ad = angle_diff_over_methods[array_ind]
@@ -213,7 +216,7 @@ for plt_ind, array_ind in enumerate([5, 2, 0, 3, 1,  4]):
     perc90_ad_total = np.array([np.quantile(m[0], 0.9, axis=1) for m in ad])
 
     # plt.figure(perc90_errors_fig)
-    myplot = plt.subplot(1, 6, plt_ind+1)
+    myplot = plt.subplot(1, 7, plt_ind+1)
     contourplot = plt.contourf(snr_all,
                                fvec,
                                np.clip(180*median_ad_total.T/np.pi, 0, 30),
@@ -227,7 +230,7 @@ for plt_ind, array_ind in enumerate([5, 2, 0, 3, 1,  4]):
     plt.xlabel('DDR in dB')
     # else:
     plt.xticks([10, 0, -10, -20], ['10', '0', '-10', ''])
-    if np.mod(plt_ind, 6) == 0:
+    if np.mod(plt_ind, 7) == 0:
         plt.ylabel('frequency in Hz')
     plt.ylim([100, 12000])
 
@@ -247,6 +250,8 @@ for plt_ind, array_ind in enumerate([5, 2, 0, 3, 1,  4]):
         title = "Sphere-5Mic"
     elif array_str == "SphericalScatterer-7":
         title = "Sphere-7Mic"
+    elif array_str == "SphericalScatterer-7-circ":
+        title = "Sphere-7Mic-circ"
 
     plt.title(title, fontsize=10)
     plt.tight_layout()
