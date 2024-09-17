@@ -9,6 +9,12 @@ import matplotlib.pyplot as plt
 import h5py
 from joblib import Parallel, delayed
 
+# %%
+# Legacy code (to create figures for paper) had an error with the computation of the modeled covariance matrix. 
+# However, results are very similar with the error fixed, and conclusions stand.
+LEGACY = False
+
+
 # %% define global parameters
 NFFT = 512
 FS = 32000
@@ -179,7 +185,10 @@ for array_str in ARRAYS:
         # when working SH representations, just decode from them
         steer_search = (shmat_grid@sh_array[:, :, :, None]
                         )[..., 0].transpose(0, 2, 1)
-        cov_isotropic = sh_array @ sh_array.transpose(0, 2, 1) / (4*np.pi)
+        if LEGACY:
+            cov_isotropic = sh_array @ sh_array.transpose(0, 2, 1) / (4*np.pi)
+        else:
+            cov_isotropic = sh_array @ np.conj(sh_array.transpose(0, 2, 1)) / (4*np.pi)
         steer_source = (shmat_grid@sh_array[:, :, :, None]
                         )[..., 0].transpose(0, 2, 1)
     
